@@ -30,38 +30,41 @@ def main():
         print("The output file '{}' already exists. Exiting".format(outfile_path), file=sys.stderr)
         return
 
-    file = []
-    with open (infile_path) as infile:
+    infile_lines = []
+    with open(infile_path, 'r') as infile:
         for fileline in infile:
             if fileline[0].upper() not in 'M%': #remove initial M-commands
-                file.append(fileline.rstrip())
+                infile_lines.append(fileline.rstrip())
 
-    newfile = []
-    newfile.append('%\n')
-    pen_down = False;
-    for fileline in file:
-        words = fileline.split()
+    outfile_lines = []
+    outfile_lines.append('%\n')
+    pen_is_down = False;
+    for fileline in infile_lines:
+        words = fileline.upper().split()
         newwords = []
         if len(words)>0 and words[0][0] == 'G' and int(words[0][1:]) <= 9: # its a gcode motion line
             for word in words:
-                if word[0].upper() == 'Z':
-                    pen_cmd_down = (float(word[1:]) <= 0.0)
-                    if pen_cmd_down != pen_down:
-                        newfile.append(COMMAND_PEN_DOWN if pen_cmd_down else COMMAND_PEN_UP)
-                        pen_down = pen_cmd_down
+                is_pen_command = (word[0] == 'Z')
+                if is_pen_command:
+                    pen_should_be_down = (float(word[1:]) <= 0.0)
+                    if pen_should_be_down and not pen_is_down:
+                        outfile_lines.append(COMMAND_PEN_DOWN)
+                    elif not pen_should_be_down and pen_is_down:
+                        outfile_lines.append(COMMAND_PEN_UP)
+                    pen_is_down = pen_should_be_down
                 else :
                     newwords.append(word)
             if len(newwords) > 2 or (len(newwords) > 1 and newwords[1][0] != 'F'): # get rid of empty feed command
-                newfile.append(" ".join(newwords))
+                outfile_lines.append(" ".join(newwords))
         else:
-            newfile.append(fileline)
+            outfile_lines.append(fileline)
 
-    newfile.append('(M5 fake stop spindle)')
-    newfile.append('%')
+    outfile_lines.append('(M5 fake stop spindle)')
+    outfile_lines.append('%\n')
 
 
     with open(outfile_path, 'w') as outfile:
-        outfile.write('\n'.join(newfile))
+        outfile.write('\n'.join(outfile_lines))
 
 if __name__=="__main__":
     main()
