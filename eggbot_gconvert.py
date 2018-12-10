@@ -2,18 +2,24 @@ import sys
 import os
 import argparse
 
-COMMAND_PEN_DOWN = "M3 S31 (Pen down)\nG4 P0.25 (wait)"
-COMMAND_PEN_UP = "M3 S90 (Pen up)\nG4 P0.25 (wait)"
+COMMAND_PEN_DOWN_TEMPLATE = "M3 S31 (Pen down)\nG4 P{wait_time:.2f} (wait)"
+COMMAND_PEN_UP_TEMPLATE = "M3 S90 (Pen up)\nG4 P{wait_time:.2f} (wait)"
 
 def main():
-    parser = argparse.ArgumentParser(description="Converts gcode files from inkscape to be used by the eggbot (e.g. removes z-movements)")
+    parser = argparse.ArgumentParser(description="Converts gcode files from inkscape so they can be used by an eggbot (e.g. replaces z-movements with pen movements)",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("filename", help="The .gcode file to convert to eggbot compatible gcode")
     parser.add_argument("--force", "-f", action="store_true", help="Force usage of input file even if wrong extension, and output file even if it will be overwritten.")
+    parser.add_argument("--wait-time", "-w", default=0.25, type=float, help="Time to wait between pen up/down commands.")
     ns = parser.parse_args()
 
     # Get passed arguments
     infile_path = ns.filename
     force = ns.force
+    wait_time = ns.wait_time
+
+    COMMAND_PEN_DOWN = COMMAND_PEN_DOWN_TEMPLATE.format(wait_time=wait_time)
+    COMMAND_PEN_UP = COMMAND_PEN_UP_TEMPLATE.format(wait_time=wait_time)
 
     # Check input file
     infile_basename, infile_extension = os.path.splitext(infile_path)
