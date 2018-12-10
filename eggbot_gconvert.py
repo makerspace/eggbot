@@ -54,10 +54,10 @@ def main():
     outfile_lines.append('%\n')
     pen_is_down = False;
     for fileline in infile_lines:
-        words = fileline.upper().split()
-        newwords = []
-        if len(words)>0 and words[0][0] == 'G' and int(words[0][1:]) <= 9: # its a gcode motion line
-            for word in words:
+        line_words = fileline.upper().split()
+        new_line_words = []
+        if len(line_words)>0 and line_words[0][0] == 'G' and int(line_words[0][1:]) <= 9: # its a gcode motion line
+            for word in line_words:
                 is_pen_command = (word[0] == 'Z')
                 if is_pen_command:
                     pen_should_be_down = (float(word[1:]) <= 0.0)
@@ -67,9 +67,9 @@ def main():
                         outfile_lines.append(COMMAND_PEN_UP)
                     pen_is_down = pen_should_be_down
                 else:
-                    newwords.append(word)
-            if len(newwords) > 2 or (len(newwords) > 1 and newwords[1][0] != 'F'): # get rid of empty feed command
-                outfile_lines.append(" ".join(newwords))
+                    new_line_words.append(word)
+            if len(new_line_words) > 2 or (len(new_line_words) > 1 and new_line_words[1][0] != 'F'): # get rid of empty feed command
+                outfile_lines.append(" ".join(new_line_words))
         else:
             outfile_lines.append(fileline)
 
