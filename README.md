@@ -11,7 +11,11 @@ This repo will contain files for creating your own eggbot and controlling it.
 
 ### Software
 
-#### Create a .gcode file
+1. Create a .gcode file in Inkscape
+2. Convert the .gcode file to Eggbot-compatible format
+3. Send the Eggbot-compatible file to the Eggbot controller
+
+#### Create a .gcode file in Inkscape
 Create a .gcode file using the Inkscape plugin *Gcodetool*. See [this link](https://www.norwegiancreations.com/2015/08/an-intro-to-g-code-and-how-to-generate-it-using-inkscape/) for an example how to do it.
 
 #### Convert the .gcode file to Eggbot-compatible format
