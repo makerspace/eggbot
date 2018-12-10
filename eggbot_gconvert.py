@@ -15,15 +15,19 @@ def main():
     infile_path = ns.filename
     force = ns.force
 
+    # Check input file
     infile_basename, infile_extension = os.path.splitext(infile_path)
+    if infile_extension != ".gcode" and not force:
+        print("Wrong input file extension. Exiting", file=sys.stderr)
+        return
 
-    # Check output file and force status
+    # Check output file
     outfile_path = infile_basename + ".eggbot" + infile_extension
     output_exists = os.path.isfile(outfile_path)
     if output_exists and force:
-        print("The output file '{}' will be overwritten".format(outfile_path), file=sys.stderr)
+        print("The output file '{}' already exists and will be overwritten.".format(outfile_path), file=sys.stderr)
     elif output_exists and not force:
-        print("The output file '{}' already exists. Add the corresponding flag to force overwrite.".format(outfile_path), file=sys.stderr)
+        print("The output file '{}' already exists. Exiting".format(outfile_path), file=sys.stderr)
         return
 
     file = []
