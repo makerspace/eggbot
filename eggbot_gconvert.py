@@ -6,6 +6,20 @@ COMMAND_PEN_DOWN_TEMPLATE = "M3 S31 (Pen down)\nG4 P{wait_time:.2f} (wait)"
 COMMAND_PEN_UP_TEMPLATE = "M3 S90 (Pen up)\nG4 P{wait_time:.2f} (wait)"
 GCODE_EXTENSIONS = (".gcode", ".ngc")
 
+class ConversionStats(object):
+    def __init__(self):
+        self.g_command_count = 0
+        self.path_count = 0
+    
+    def increment_g_command_count(self):
+        self.g_command_count = self.g_command_count + 1
+
+    def increment_path_count(self):
+        self.path_count = self.path_count + 1
+
+    def __str__(self):
+        return "Number of paths: {}\nNumber of G-commands: {}".format(self.path_count, self.g_command_count)
+
 def main():
     parser = argparse.ArgumentParser(description="Converts gcode files from inkscape so they can be used by an eggbot (e.g. replaces z-movements with pen movements)",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -13,15 +27,19 @@ def main():
     parser.add_argument("--force", "-f", action="store_true", help="Force usage of input file even if wrong extension, and output file even if it will be overwritten.")
     parser.add_argument("--wait-time", "-w", default=0.25, type=float, help="Time to wait between pen up/down commands.")
     parser.add_argument("--output", "-o", default=argparse.SUPPRESS, help="Output file name to use. Derived from input file if omitted.")
+    parser.add_argument("--no-stat", action="store_true", help="Do not print stats collected during conversion.")
     ns = parser.parse_args()
 
     # Get passed arguments
     infile_path = ns.filename
     force = ns.force
     wait_time = ns.wait_time
+    print_stats = not ns.no_stat
 
     COMMAND_PEN_DOWN = COMMAND_PEN_DOWN_TEMPLATE.format(wait_time=wait_time)
     COMMAND_PEN_UP = COMMAND_PEN_UP_TEMPLATE.format(wait_time=wait_time)
+
+    stats = ConversionStats()
 
     # Check input file
     infile_basename, infile_extension = os.path.splitext(infile_path)
@@ -57,11 +75,13 @@ def main():
         line_words = fileline.upper().split()
         new_line_words = []
         if len(line_words)>0 and line_words[0][0] == 'G' and int(line_words[0][1:]) <= 9: # its a gcode motion line
+            stats.increment_g_command_count()
             for word in line_words:
                 is_pen_command = (word[0] == 'Z')
                 if is_pen_command:
                     pen_should_be_down = (float(word[1:]) <= 0.0)
                     if pen_should_be_down and not pen_is_down:
+                        stats.increment_path_count()
                         outfile_lines.append(COMMAND_PEN_DOWN)
                     elif not pen_should_be_down and pen_is_down:
                         outfile_lines.append(COMMAND_PEN_UP)
@@ -78,6 +98,9 @@ def main():
 
     with open(outfile_path, 'w') as outfile:
         outfile.write('\n'.join(outfile_lines))
+
+    if print_stats:
+        print(stats)
 
 if __name__=="__main__":
     main()
