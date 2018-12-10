@@ -4,6 +4,7 @@ import argparse
 
 COMMAND_PEN_DOWN_TEMPLATE = "M3 S31 (Pen down)\nG4 P{wait_time:.2f} (wait)"
 COMMAND_PEN_UP_TEMPLATE = "M3 S90 (Pen up)\nG4 P{wait_time:.2f} (wait)"
+GCODE_EXTENSIONS = (".gcode", ".ngc")
 
 def main():
     parser = argparse.ArgumentParser(description="Converts gcode files from inkscape so they can be used by an eggbot (e.g. replaces z-movements with pen movements)",
@@ -23,7 +24,7 @@ def main():
 
     # Check input file
     infile_basename, infile_extension = os.path.splitext(infile_path)
-    if infile_extension != ".gcode" and not force:
+    if infile_extension not in GCODE_EXTENSIONS and not force:
         print("Wrong input file extension. Exiting", file=sys.stderr)
         return
 
@@ -58,7 +59,7 @@ def main():
                     elif not pen_should_be_down and pen_is_down:
                         outfile_lines.append(COMMAND_PEN_UP)
                     pen_is_down = pen_should_be_down
-                else :
+                else:
                     newwords.append(word)
             if len(newwords) > 2 or (len(newwords) > 1 and newwords[1][0] != 'F'): # get rid of empty feed command
                 outfile_lines.append(" ".join(newwords))
@@ -67,7 +68,6 @@ def main():
 
     outfile_lines.append('(M5 fake stop spindle)')
     outfile_lines.append('%\n')
-
 
     with open(outfile_path, 'w') as outfile:
         outfile.write('\n'.join(outfile_lines))
