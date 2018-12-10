@@ -12,6 +12,7 @@ def main():
     parser.add_argument("filename", help="The .gcode file to convert to eggbot compatible gcode")
     parser.add_argument("--force", "-f", action="store_true", help="Force usage of input file even if wrong extension, and output file even if it will be overwritten.")
     parser.add_argument("--wait-time", "-w", default=0.25, type=float, help="Time to wait between pen up/down commands.")
+    parser.add_argument("--output", "-o", default=argparse.SUPPRESS, help="Output file name to use. Derived from input file if omitted.")
     ns = parser.parse_args()
 
     # Get passed arguments
@@ -28,13 +29,19 @@ def main():
         print("Wrong input file extension. Exiting", file=sys.stderr)
         return
 
+    # Get output file path
+    if "output" in ns:
+        outfile_path = ns.output
+    else:
+        outfile_path = infile_basename + ".eggbot" + infile_extension
+    print("Output file: '{}'".format(outfile_path), file=sys.stderr)
+
     # Check output file
-    outfile_path = infile_basename + ".eggbot" + infile_extension
     output_exists = os.path.isfile(outfile_path)
     if output_exists and force:
-        print("The output file '{}' already exists and will be overwritten.".format(outfile_path), file=sys.stderr)
+        print("The output file already exists and will be overwritten.", file=sys.stderr)
     elif output_exists and not force:
-        print("The output file '{}' already exists. Exiting".format(outfile_path), file=sys.stderr)
+        print("The output file already exists. Exiting", file=sys.stderr)
         return
 
     infile_lines = []
